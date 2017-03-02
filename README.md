@@ -10,3 +10,10 @@
 
 
 ![stitch](https://github.com/sysorem/Binocular-vision-ranging/blob/master/assets/SITICH.jpg)
+
+
+# Calibration模块
+原图
+![stitch](https://github.com/sysorem/Binocular-vision-ranging/blob/master/assets/calibration_origin.jpg)
+标定后
+![stitch](https://github.com/sysorem/Binocular-vision-ranging/blob/master/assets/calibration.jpg)
