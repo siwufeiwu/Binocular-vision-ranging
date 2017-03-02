@@ -5,16 +5,16 @@ import cv2
 import math
 import numpy as np
 from match import *
-
+import time
 
 ## 模块说明：将两幅图像通过SURF算法及金字塔LK光流法获取特征点
 
 # 关键点转换
-def keypointToPoint(keypoint):
-    point = np.zeros(len(keypoint) * 2, np.float32)    
-    for i in range(len(keypoint)):
-        point[i * 2] = keypoint[i].pt[0]
-        point[i * 2 + 1] = keypoint[i].pt[1]
+def keypointToPoint(KEYPOINT):
+    point = np.zeros(len(KEYPOINT) * 2, np.float32)    
+    for i in range(len(KEYPOINT)):
+        point[i * 2] = KEYPOINT[i].pt[0]
+        point[i * 2 + 1] = KEYPOINT[i].pt[1]
     return point.reshape(-1,2)
 # 连线匹配的点
 def MatchPoint(IMG_LETF,IMG_RIGHT,POINTS):
@@ -27,9 +27,9 @@ def MatchPoint(IMG_LETF,IMG_RIGHT,POINTS):
     for x in xrange(HEIGHT):
         for y in xrange(WIDTH):
             if y < OFFSET:
-               IMG_STITCH[x][y] = IMG_LETF[x][y]
+                IMG_STITCH[x][y] = IMG_LETF[x][y]
             else:
-               IMG_STITCH[x][y] = IMG_RIGHT[x][y-OFFSET]
+                IMG_STITCH[x][y] = IMG_RIGHT[x][y-OFFSET]
     # 连线匹配的点
     for p in POINTS:
         cv2.line(IMG_STITCH,(p[0][0],p[0][1]),(int(p[1][0]+IMG_LETF.shape[1]),p[1][1]),255 * np.random.random(size=3),1,8)
@@ -51,15 +51,15 @@ def GetPoint(IMG_LEFT_GRAY,IMG_RIGHT_GRAY):
     pt_left = keypointToPoint(kp_left)        
     pt_right = keypointToPoint(kp_right)
     # 金字塔LK光流法预测下一帧小运动偏移点
-    pyramid = dict(winSize=(10,10), maxLevel=2, criteria=(3L,10,0.03))                  
+    pyramid = dict(winSize=(10,10), maxLevel=2, criteria=(3L,10,0.03))                          
     pt_right, status, error = cv2.calcOpticalFlowPyrLK(IMG_LEFT_GRAY, IMG_RIGHT_GRAY, pt_left, None, **pyramid)
     # 过滤错误率高的点
     HIGH_ERRS = {}
     for i in range(len(pt_right)):
          if status[i][0] == 1 and error[i][0] < 12:
-            HIGH_ERRS[i] = pt_right[i]
+             HIGH_ERRS[i] = pt_right[i]
          else:
-            status[i] = 0
+             status[i] = 0
     # BF匹配
     bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
     matches = bf.match(desc_left, desc_right)
@@ -73,9 +73,10 @@ def GetPoint(IMG_LEFT_GRAY,IMG_RIGHT_GRAY):
     return points
 
 if __name__ == "__main__":
+    start = time.time()
     # 加载分别从两个摄像头传入的图像
-    IMG_LETF = cv2.imread('IMG_LEFT.jpg')
-    IMG_RIGHT = cv2.imread('IMG_RIGHT.jpg')
+    IMG_LETF = cv2.imread('PRI_LEFT.jpg')
+    IMG_RIGHT = cv2.imread('PRI_RIGHT.jpg')
     # 获取图像矩阵
     # ROWS, COLS, CHANNELS = IMG_LETF.shape
     # 颜色空间转换
@@ -85,6 +86,7 @@ if __name__ == "__main__":
     IMG_LEFT_GRAY = cv2.cvtColor(IMG_LETF, cv2.COLOR_RGB2GRAY)
     IMG_RIGHT_GRAY = cv2.cvtColor(IMG_RIGHT, cv2.COLOR_RGB2GRAY)
     # 连线匹配的点
+    end = time.time()
     MatchPoint(IMG_LETF,IMG_RIGHT,GetPoint(IMG_LEFT_GRAY,IMG_RIGHT_GRAY))
-
+    # print 'Time costs : %f ' % (end - start)
 
