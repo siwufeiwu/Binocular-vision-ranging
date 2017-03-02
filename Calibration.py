@@ -85,7 +85,7 @@ def SizeofPic(PATH):
 	return pf.shape[::-1]
 
 if __name__ == '__main__':
-	(IMG_GRAY,obj_points,img_points,RET,MTX,DIST,RVS,TVS) = Calibration("./calibration/*.JPG",7,7,1024,768)
+	(IMG_GRAY,obj_points,img_points,RET,MTX,DIST,RVS,TVS) = Calibration("./assets/calibration/*.JPG",7,7,1024,768)
 	# print BackProjErr(obj_points,img_points,RET,MTX,DIST,RVS,TVS)
 	# IMG = RemvDist(IMG_GRAY,MTX,DIST)
 

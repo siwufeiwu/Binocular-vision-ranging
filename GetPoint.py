@@ -15,7 +15,7 @@ def keypointToPoint(KEYPOINT):
     for i in range(len(KEYPOINT)):
         point[i * 2] = KEYPOINT[i].pt[0]
         point[i * 2 + 1] = KEYPOINT[i].pt[1]
-    return point.reshape(-1,2)
+        return point.reshape(-1,2)
 # 连线匹配的点
 def MatchPoint(IMG_LETF,IMG_RIGHT,POINTS):
     # 设置偏移，总的长和宽
@@ -37,7 +37,7 @@ def MatchPoint(IMG_LETF,IMG_RIGHT,POINTS):
     cv2.imshow('MatchPoint',IMG_STITCH)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    cv2.imwrite('SITICH.jpg',IMG_STITCH)
+    cv2.imwrite('./assets/SITICH.jpg',IMG_STITCH)
 
 # 获取特征点
 def GetPoint(IMG_LEFT_GRAY,IMG_RIGHT_GRAY):
@@ -69,14 +69,30 @@ def GetPoint(IMG_LEFT_GRAY,IMG_RIGHT_GRAY):
     maxdist = np.median(dist)
     rest = [m for m in matches if m.distance < maxdist]
     # 选取两幅图像中经过筛选之后的点
-    points = np.float32([(kp_left[m.queryIdx].pt,kp_right[m.trainIdx].pt) for m in rest])
-    return points
+    pts_left = []
+    pts_right = []
+    points = []
+    for m in rest:
+        pts_left.append(kp_left[m.queryIdx].pt)
+        pts_right.append(kp_right[m.trainIdx].pt)
+        points.append((kp_left[m.queryIdx].pt,kp_right[m.trainIdx].pt))
+    pts_left = np.float32(pts_left)
+    pts_right = np.float32(pts_right)
+    points = np.float32(points)
+    # 根据匹配点对计算基础矩阵
+    F, mask = cv2.findFundamentalMat(pts_left,pts_right,cv2.FM_LMEDS) 
+    # 寻则内部点
+    pts_left = pts_left[mask.ravel()==1]
+    pts_right = pts_right[mask.ravel()==1]
+    return pts_left,pts_right,points,F
+
+
 
 if __name__ == "__main__":
     start = time.time()
     # 加载分别从两个摄像头传入的图像
-    IMG_LETF = cv2.imread('PRI_LEFT.jpg')
-    IMG_RIGHT = cv2.imread('PRI_RIGHT.jpg')
+    IMG_LETF = cv2.imread('./assets/IMG_LEFT.jpg')
+    IMG_RIGHT = cv2.imread('./assets/IMG_RIGHT.jpg')
     # 获取图像矩阵
     # ROWS, COLS, CHANNELS = IMG_LETF.shape
     # 颜色空间转换
@@ -87,6 +103,6 @@ if __name__ == "__main__":
     IMG_RIGHT_GRAY = cv2.cvtColor(IMG_RIGHT, cv2.COLOR_RGB2GRAY)
     # 连线匹配的点
     end = time.time()
-    MatchPoint(IMG_LETF,IMG_RIGHT,GetPoint(IMG_LEFT_GRAY,IMG_RIGHT_GRAY))
+    MatchPoint(IMG_LETF,IMG_RIGHT,GetPoint(IMG_LEFT_GRAY,IMG_RIGHT_GRAY)[2])
     # print 'Time costs : %f ' % (end - start)
 
